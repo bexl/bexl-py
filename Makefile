@@ -8,6 +8,9 @@ test::
 	@pipenv run coverage run --rcfile=setup.cfg --module py.test
 	@pipenv run coverage report --rcfile=setup.cfg
 
+ci:: test
+	@pipenv run coveralls --rcfile=setup.cfg
+
 test-watch::
 	@pipenv run ptw
 

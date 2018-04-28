@@ -1,0 +1,18 @@
+build: "off"
+
+environment:
+  matrix:
+    - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python34"
+    - PYTHON: "C:\\Python35"
+    - PYTHON: "C:\\Python36"
+
+install:
+  - pip --version
+  - pip install pipenv
+  - pipenv --version
+  - pipenv install --dev
+
+test_script:
+  - pipenv run py.test
+
