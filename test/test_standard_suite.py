@@ -73,6 +73,9 @@ def test_standard_suite(group_name, test_name, test):
             raise
     else:
         if 'value' in test['result']:
-            assert bexl_to_python(actual) == make_native(test['result'])
+            if test['result']['type'] == 'FLOAT':
+                assert bexl_to_python(actual) == pytest.approx(make_native(test['result']), abs=1e-13)
+            else:
+                assert bexl_to_python(actual) == make_native(test['result'])
         assert actual.data_type == test['result']['type'].lower()
 
