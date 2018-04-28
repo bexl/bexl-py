@@ -1,0 +1,4544 @@
+bexl_version: "0.1"
+suite_version: "0.1.0"
+suite:
+  - desc: Boolean Literals
+    tests:
+      - desc: "True"
+        expr: "True"
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: "False"
+        expr: "False"
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: Integer Literals
+    tests:
+      - desc: Zero
+        expr: "0"
+        result:
+          value: 0
+          type: INTEGER
+      - desc: Multi-digit
+        expr: "123"
+        result:
+          value: 123
+          type: INTEGER
+      - desc: Leading Zero
+        expr: "0123"
+        result:
+          value: 123
+          type: INTEGER
+
+  - desc: Float Literals
+    tests:
+      - desc: Zero
+        expr: "0.0"
+        result:
+          value: 0.0
+          type: FLOAT
+      - desc: Multi-digit
+        expr: "123.123"
+        result:
+          value: 123.123
+          type: FLOAT
+      - desc: Leading/Trailing Zeros
+        expr: "0123.1230"
+        result:
+          value: 123.123
+          type: FLOAT
+      - desc: Exponential; Negative
+        expr: "123e-4"
+        result:
+          value: 0.0123
+          type: FLOAT
+      - desc: Exponential; Positive
+        expr: "123e+4"
+        result:
+          value: 1230000
+          type: FLOAT
+      - desc: Exponential; Unsigned
+        expr: "123e4"
+        result:
+          value: 1230000
+          type: FLOAT
+      - desc: Exponential; Leading Zero
+        expr: "123e04"
+        result:
+          value: 1230000
+          type: FLOAT
+      - desc: Exponential; Decimal; Negative
+        expr: "123.45e-4"
+        result:
+          value: 0.012345
+          type: FLOAT
+      - desc: Exponential; Decimal; Positive
+        expr: "123.45e+4"
+        result:
+          value: 1234500
+          type: FLOAT
+      - desc: Exponential; Decimal; Unsigned
+        expr: "123.45e4"
+        result:
+          value: 1234500
+          type: FLOAT
+      - desc: Incomplete literal
+        expr: "123e"
+        error: Incomplete float literal
+
+  - desc: String Literals
+    tests:
+      - desc: Empty
+        expr: "''"
+        result:
+          value: ""
+          type: STRING
+      - desc: Simple
+        expr: "'foo BAR BaZ'"
+        result:
+          value: "foo BAR BaZ"
+          type: STRING
+      - desc: With Newlines
+        expr: |
+          'foo
+          BAR
+          BaZ'
+        result:
+          value: |-
+            foo
+            BAR
+            BaZ
+          type: STRING
+      - desc: Escaped Quote
+        expr: "'foo\\'bar'"
+        result:
+          value: "foo'bar"
+          type: STRING
+      - desc: Just a Slash
+        expr: "'foo\\bar'"
+        result:
+          value: "foo\\bar"
+          type: STRING
+      - desc: Unterminated literal
+        expr: "'foo"
+        error: Unterminated string literal
+
+  - desc: List Literals
+    tests:
+      - desc: Empty
+        expr: "[]"
+        result:
+          value: []
+          type: LIST
+      - desc: Simple
+        expr: "[1, 2 ,3 ]"
+        result:
+          value: [1, 2, 3]
+          type: LIST
+      - desc: Multityped
+        expr: "['foo', 1, True, 1.23]"
+        result:
+          value: ['foo', 1, true, 1.23]
+          type: LIST
+
+  - desc: Negation Operator
+    tests:
+      - desc: Integer; Zero
+        expr: "-0"
+        result:
+          value: 0
+          type: INTEGER
+      - desc: Integer
+        expr: "-123"
+        result:
+          value: -123
+          type: INTEGER
+      - desc: Integer; Null
+        expr: "-$test"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: Float; Zero
+        expr: "-0.0"
+        result:
+          value: 0.0
+          type: FLOAT
+      - desc: Float
+        expr: "-1.23"
+        result:
+          value: -1.23
+          type: FLOAT
+      - desc: Float; Null
+        expr: "-$test"
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: Not Operator
+    tests:
+      - desc: Not True
+        expr: '!True'
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: Not False
+        expr: '!False'
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: Not Not False
+        expr: '!!False'
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: Not null
+        expr: '!$test'
+        result:
+          value: true
+          type: BOOLEAN
+        vars:
+          test:
+            value: null
+            type: BOOLEAN
+
+  - desc: Addition Operator
+    tests:
+      - desc: int+int
+        expr: 123 + 456
+        result:
+          value: 579
+          type: INTEGER
+      - desc: int+float
+        expr: 123 + 456.12
+        result:
+          value: 579.12
+          type: FLOAT
+      - desc: float+int
+        expr: 123.12 + 456
+        result:
+          value: 579.12
+          type: FLOAT
+      - desc: float+float
+        expr: 123.12 + 456.55
+        result:
+          value: 579.6700000000001
+          type: FLOAT
+      - desc: date+int
+        expr: date(2018, 4, 2) + 7
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: int+date
+        expr: 7 + date(2018, 4, 2)
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: date+float
+        expr: date(2018, 4, 2) + 7.5
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: float+date
+        expr: 7.5 + date(2018, 4, 2)
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: datetime+int
+        expr: datetime(2018, 4, 2, 12, 34, 56) + 7
+        result:
+          value: "2018-04-09T12:34:56"
+          type: DATETIME
+      - desc: int+datetime
+        expr: 7 + datetime(2018, 4, 2, 12, 34, 56)
+        result:
+          value: "2018-04-09T12:34:56"
+          type: DATETIME
+      - desc: datetime+float
+        expr: datetime(2018, 4, 2, 12, 34, 56) + 7.5
+        result:
+          value: "2018-04-10T00:34:56"
+          type: DATETIME
+      - desc: float+datetime
+        expr: 7.5 + datetime(2018, 4, 2, 12, 34, 56)
+        result:
+          value: "2018-04-10T00:34:56"
+          type: DATETIME
+      - desc: time+int
+        expr: time(12, 34, 56) + 7
+        result:
+          value: "12:35:03"
+          type: TIME
+      - desc: int+time
+        expr: 7 + time(12, 34, 56)
+        result:
+          value: "12:35:03"
+          type: TIME
+      - desc: time+float
+        expr: time(12, 34, 56) + 7.5
+        result:
+          value: "12:35:03.5"
+          type: TIME
+      - desc: float+time
+        expr: 7.5 + time(12, 34, 56)
+        result:
+          value: "12:35:03.5"
+          type: TIME
+      - desc: date+null
+        expr: date(2018, 4, 2) + $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: DATE
+      - desc: time+null
+        expr: time(12, 34, 56) + $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: TIME
+      - desc: int+null
+        expr: 123 + $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: null+int
+        expr: $test + 123
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: Subtraction Operator
+    tests:
+      - desc: int-int
+        expr: 456 - 123
+        result:
+          value: 333
+          type: INTEGER
+      - desc: int-float
+        expr: 123 - 456.12
+        result:
+          value: -333.12
+          type: FLOAT
+      - desc: float-int
+        expr: 123.12 - 23
+        result:
+          value: 100.12
+          type: FLOAT
+      - desc: float-float
+        expr: 123.12 - 3.12
+        result:
+          value: 120.0
+          type: FLOAT
+      - desc: date-int
+        expr: date(2018, 4, 2) - 7
+        result:
+          value: "2018-03-26"
+          type: DATE
+      - desc: date-float
+        expr: date(2018, 4, 2) - 7.5
+        result:
+          value: "2018-03-25"
+          type: DATE
+      - desc: datetime-int
+        expr: datetime(2018, 4, 2, 12, 34, 56) - 7
+        result:
+          value: "2018-03-26T12:34:56"
+          type: DATETIME
+      - desc: datetime-float
+        expr: datetime(2018, 4, 2, 12, 34, 56) - 7.5
+        result:
+          value: "2018-03-26T00:34:56"
+          type: DATETIME
+      - desc: date-date
+        expr: date(2018, 4, 9) - date(2018, 4, 2)
+        result:
+          value: 7
+          type: INTEGER
+      - desc: datetime-date
+        expr: datetime(2018, 4, 9, 12, 34, 56) - date(2018, 4, 2)
+        result:
+          value: 7.524259259259259
+          type: FLOAT
+      - desc: date-datetime
+        expr: date(2018, 4, 9) - datetime(2018, 4, 2, 12, 34, 56)
+        result:
+          value: 6.475740740740741
+          type: FLOAT
+      - desc: datetime-datetime
+        expr: datetime(2018, 4, 9, 12, 34, 56) - datetime(2018, 4, 2, 12, 34, 56)
+        result:
+          value: 7.0
+          type: FLOAT
+      - desc: time-int
+        expr: time(12, 34, 56) - 7
+        result:
+          value: "12:34:49"
+          type: TIME
+      - desc: time-float
+        expr: time(12, 34, 56) - 7.5
+        result:
+          value: "12:34:48.5"
+          type: TIME
+      - desc: time-time
+        expr: time(12, 34, 56, 123) - time(5, 6, 7)
+        result:
+          value: 26929.123
+          type: FLOAT
+      - desc: date-null integer
+        expr: date(2018, 4, 2) - $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: DATE
+      - desc: date-null date
+        expr: date(2018, 4, 2) - $test
+        vars:
+          test:
+            value: null
+            type: DATE
+        result:
+          value: null
+          type: INTEGER
+      - desc: time-null integer
+        expr: time(12, 34, 56) - $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: TIME
+      - desc: time-null time
+        expr: time(12, 34, 56) - $test
+        vars:
+          test:
+            value: null
+            type: TIME
+        result:
+          value: null
+          type: FLOAT
+      - desc: int-null
+        expr: 123 - $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: null-int
+        expr: $test - 123
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: Multiplication Operator
+    tests:
+      - desc: int*int
+        expr: 123 * 456
+        result:
+          value: 56088
+          type: INTEGER
+      - desc: int*float
+        expr: 123 * 456.12
+        result:
+          value: 56102.76
+          type: FLOAT
+      - desc: float*int
+        expr: 123.12 * 456
+        result:
+          value: 56142.72
+          type: FLOAT
+      - desc: float*float
+        expr: 123.12 * 456.55
+        result:
+          value: 56210.436
+          type: FLOAT
+      - desc: int*null
+        expr: 123 * $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: null*int
+        expr: $test * 123
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: Division Operator
+    tests:
+      - desc: int/int
+        expr: 456 / 100
+        result:
+          value: 4.56
+          type: FLOAT
+      - desc: int/float
+        expr: 123 / 456.12
+        result:
+          value: 0.26966587740068404
+          type: FLOAT
+      - desc: float/int
+        expr: 123.12 / 23
+        result:
+          value: 5.35304347826087
+          type: FLOAT
+      - desc: float/float
+        expr: 123.12 / 3.12
+        result:
+          value: 39.46153846153846
+          type: FLOAT
+      - desc: Zero Numerator
+        expr: 0 / 100
+        result:
+          value: 0.0
+          type: FLOAT
+      - desc: int/null
+        expr: 123 / $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+      - desc: null/int
+        expr: $test / 123
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+      - desc: Zero Denominator
+        expr: 10 / 0
+        error: Cannot divide by zero
+
+  - desc: Modulo Operator
+    tests:
+      - desc: int%int
+        expr: 456 % 100
+        result:
+          value: 56
+          type: INTEGER
+      - desc: int%float
+        expr: 123 % 456.12
+        result:
+          value: 123.0
+          type: FLOAT
+      - desc: float%int
+        expr: 123.12 % 23
+        result:
+          value: 8.120000000000005
+          type: FLOAT
+      - desc: float%float
+        expr: 123.12 % 3.12
+        result:
+          value: 1.4400000000000004
+          type: FLOAT
+      - desc: int%null
+        expr: 123 % $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: null%int
+        expr: $test % 123
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: Power Operator
+    tests:
+      - desc: int**int
+        expr: 2 ** 7
+        result:
+          value: 128
+          type: INTEGER
+      - desc: int**float
+        expr: 3 ** 2.4
+        result:
+          value: 13.966610165238235
+          type: FLOAT
+      - desc: float**int
+        expr: 14.12 ** 3
+        result:
+          value: 2815.1665279999997
+          type: FLOAT
+      - desc: float**float
+        expr: 14.12 ** 2.4
+        result:
+          value: 574.9145131467701
+          type: FLOAT
+      - desc: int**null
+        expr: 123 ** $test
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: null**int
+        expr: $test ** 123
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: Logical And Operator
+    tests:
+      - desc: true&true
+        expr: True & True
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: true&false
+        expr: True & False
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: false&false
+        expr: False & False
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: bool&float
+        expr: True & 1.213232
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&integer
+        expr: True & 123
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&string
+        expr: True & 'foo'
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&list
+        expr: True & [1]
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&record
+        expr: True & record('foo', 123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&date
+        expr: True & date('2018-04-02')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&time
+        expr: True & time('12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&datetime
+        expr: True & datetime('2018-04-02T12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool&null
+        expr: True & Null
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: Logical Or Operator
+    tests:
+      - desc: true|false
+        expr: True | False
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: true|true
+        expr: True | True
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: false|false
+        expr: False | False
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: bool|float
+        expr: False | 1.213232
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|integer
+        expr: False | 123
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|string
+        expr: False | 'foo'
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|list
+        expr: False | [1]
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|record
+        expr: False | record('foo', 123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|date
+        expr: False | date('2018-04-02')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|time
+        expr: False | time('12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|datetime
+        expr: False | datetime('2018-04-02T12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool|null
+        expr: True | Null
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: Logical Xor Operator
+    tests:
+      - desc: true^false
+        expr: True ^ False
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: true^true
+        expr: True ^ True
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: false^false
+        expr: False ^ False
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: bool^float
+        expr: False ^ 1.213232
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^integer
+        expr: False ^ 123
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^string
+        expr: False ^ 'foo'
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^list
+        expr: False ^ [1]
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^record
+        expr: False ^ record('foo', 123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^date
+        expr: False ^ date('2018-04-02')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^time
+        expr: False ^ time('12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^datetime
+        expr: False ^ datetime('2018-04-02T12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool^null
+        expr: False ^ Null
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: Indexing
+    tests:
+      - desc: list[pos]
+        expr: "[1, 2, 3, 4][2]"
+        result:
+          value: 3
+          type: INTEGER
+      - desc: list[start:]
+        expr: "[1, 2, 3, 4][2:]"
+        result:
+          value: [3, 4]
+          type: LIST
+      - desc: list[:end]
+        expr: "[1, 2, 3, 4][:2]"
+        result:
+          value: [1, 2]
+          type: LIST
+      - desc: list[start:end]
+        expr: "[1, 2, 3, 4][1:3]"
+        result:
+          value: [2, 3]
+          type: LIST
+      - desc: list[null]
+        expr: "[1, 2, 3, 4][$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        error: Position cannot be null
+      - desc: emptylist[pos]
+        expr: "[][2]"
+        result:
+          value: null
+          type: UNTYPED
+      - desc: null[pos]
+        expr: "$test[2]"
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: UNTYPED
+      - desc: list[null:]
+        expr: "[1, 2, 3, 4][$test:]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: [1, 2, 3, 4]
+          type: LIST
+      - desc: list[:null]
+        expr: "[1, 2, 3, 4][:$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: [1, 2, 3, 4]
+          type: LIST
+      - desc: list[null:null]
+        expr: "[1, 2, 3, 4][$test:$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: [1, 2, 3, 4]
+          type: LIST
+      - desc: list[start:null]
+        expr: "[1, 2, 3, 4][2:$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: [3, 4]
+          type: LIST
+      - desc: list[null:end]
+        expr: "[1, 2, 3, 4][$test:2]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: [1, 2]
+          type: LIST
+      - desc: string[pos]
+        expr: "'foobar'[3]"
+        result:
+          value: b
+          type: STRING
+      - desc: string[start:]
+        expr: "'foobar'[3:]"
+        result:
+          value: bar
+          type: STRING
+      - desc: string[:end]
+        expr: "'foobar'[:3]"
+        result:
+          value: foo
+          type: STRING
+      - desc: string[start:end]
+        expr: "'foobar'[1:4]"
+        result:
+          value: oob
+          type: STRING
+      - desc: string[null]
+        expr: "'foobar'[$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        error: Position cannot be null
+      - desc: emptystring[pos]
+        expr: "''[2]"
+        result:
+          value: null
+          type: UNTYPED
+      - desc: null[pos]
+        expr: "$test[2]"
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: UNTYPED
+      - desc: string[null:]
+        expr: "'foobar'[$test:]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: foobar
+          type: STRING
+      - desc: string[:null]
+        expr: "'foobar'[:$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: foobar
+          type: STRING
+      - desc: string[null:null]
+        expr: "'foobar'[$test:$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: foobar
+          type: STRING
+      - desc: string[start:null]
+        expr: "'foobar'[2:$test]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: obar
+          type: STRING
+      - desc: string[null:end]
+        expr: "'foobar'[$test:2]"
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: fo
+          type: STRING
+      - desc: interger[pos]
+        expr: "123[2]"
+        error: Cannot index an integer
+      - desc: interger[start:end]
+        expr: "123[1:2]"
+        error: Cannot index an integer
+
+  - desc: Property Access
+    tests:
+      - desc: record.property
+        expr: "$test.foo"
+        vars:
+          test:
+            value:
+              foo: 3
+            type: RECORD
+        result:
+          value: 3
+          type: INTEGER
+      - desc: record.property.property
+        expr: "$test.foo.bar"
+        vars:
+          test:
+            value:
+              foo:
+                bar: baz
+            type: RECORD
+        result:
+          value: baz
+          type: STRING
+      - desc: list[index].property
+        expr: "$test[1].foo"
+        vars:
+          test:
+            value: ['foo', {'foo': 4}]
+            type: LIST
+        result:
+          value: 4
+          type: INTEGER
+      - desc: Non-existent property
+        expr: "$test.foo"
+        vars:
+          test:
+            value:
+              bar: 3
+            type: RECORD
+        error: Property does not exist
+      - desc: null record
+        expr: "$test.foo"
+        vars:
+          test:
+            value: null
+            type: RECORD
+        result:
+          value: null
+          type: UNTYPED
+
+  - desc: Grouping
+    tests:
+      - desc: (integer)
+        expr: "(3)"
+        result:
+          value: 3
+          type: INTEGER
+      - desc: (expression)
+        expr: "(3 * 2)"
+        result:
+          value: 6
+          type: INTEGER
+
+  - desc: Variables
+    tests:
+      - desc: Defined Variable
+        expr: "$test"
+        vars:
+          test:
+            value: 123
+            type: INTEGER
+        result:
+          value: 123
+          type: INTEGER
+      - desc: Undefined variable
+        expr: "$test"
+        error: Cannot resolve variable
+
+  - desc: isNull()
+    tests:
+      - desc: "Null"
+        expr: isNull(Null)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: Typed Null
+        expr: isNull($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: "Not Null"
+        expr: isNull(123)
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: coalesce()
+    tests:
+      - desc: coalesce()
+        expr: coalesce()
+        result:
+          value: null
+          type: UNTYPED
+      - desc: coalesce(null)
+        expr: coalesce(Null)
+        result:
+          value: null
+          type: UNTYPED
+      - desc: coalesce(value)
+        expr: coalesce(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: coalesce(null, value)
+        expr: coalesce(Null, 123)
+        result:
+          value: 123
+          type: INTEGER
+
+  - desc: min()
+    tests:
+      - desc: min(list of integers)
+        expr: min([1,2,3])
+        result:
+          value: 1
+          type: INTEGER
+      - desc: min(list of floats)
+        expr: min([1.1,2.2,3.3])
+        result:
+          value: 1.1
+          type: FLOAT
+      - desc: min(mixed numbers)
+        expr: min([3.4, 100, -1.2, 0])
+        result:
+          value: -1.2
+          type: FLOAT
+      - desc: min(list of dates)
+        expr: min([date(2000, 1, 2), date(1923, 4, 7), date(2201, 11, 12)])
+        result:
+          value: '1923-04-07'
+          type: DATE
+      - desc: min(list of datetimes)
+        expr: min([datetime(2000, 1, 2, 4, 5, 6), datetime(2000, 1, 2, 0, 0, 1), datetime(2201, 11, 12, 1, 2, 3)])
+        result:
+          value: '2000-01-02T00:00:01'
+          type: DATETIME
+      - desc: min(mixed dates)
+        expr: min([date(2000, 1, 2), date(1923, 4, 7), datetime(2000, 1, 2, 4, 5, 6), date(2201, 11, 12)])
+        result:
+          value: '1923-04-07'
+          type: DATE
+      - desc: min(list of times)
+        expr: min([time(12, 34, 56), time(1, 2, 3, 456), time(23, 59, 59)])
+        result:
+          value: '01:02:03.456'
+          type: TIME
+      - desc: min(empty list)
+        expr: min([])
+        result:
+          value: null
+          type: UNTYPED
+      - desc: min(null)
+        expr: min($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: UNTYPED
+      - desc: min(bad types)
+        expr: min([1, 2, 'foo'])
+        error: Bad data types
+
+  - desc: max()
+    tests:
+      - desc: max(list of integers)
+        expr: max([1,2,3])
+        result:
+          value: 3
+          type: INTEGER
+      - desc: max(list of floats)
+        expr: max([1.1,2.2,3.3])
+        result:
+          value: 3.3
+          type: FLOAT
+      - desc: max(mixed numbers)
+        expr: max([3.4, 100, -1.2, 0])
+        result:
+          value: 100
+          type: INTEGER
+      - desc: max(list of dates)
+        expr: max([date(2000, 1, 2), date(1923, 4, 7), date(2201, 11, 12)])
+        result:
+          value: '2201-11-12'
+          type: DATE
+      - desc: max(list of datetimes)
+        expr: max([datetime(2000, 1, 2, 4, 5, 6), datetime(2000, 1, 2, 0, 0, 1), datetime(1201, 11, 12, 1, 2, 3)])
+        result:
+          value: '2000-01-02T04:05:06'
+          type: DATETIME
+      - desc: max(mixed dates)
+        expr: max([date(2000, 1, 2), date(1923, 4, 7), datetime(2000, 1, 2, 4, 5, 6), date(2201, 11, 12)])
+        result:
+          value: '2201-11-12'
+          type: DATE
+      - desc: max(list of times)
+        expr: max([time(12, 34, 56), time(1, 2, 3, 456), time(23, 59, 59)])
+        result:
+          value: '23:59:59'
+          type: TIME
+      - desc: max(empty list)
+        expr: max([])
+        result:
+          value: null
+          type: UNTYPED
+      - desc: max(null)
+        expr: max($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: UNTYPED
+      - desc: max(bad types)
+        expr: max([1, 2, 'foo'])
+        error: Not integer or float
+
+  - desc: sum()
+    tests:
+      - desc: sum(list of integers)
+        expr: sum([1,2,3])
+        result:
+          value: 6
+          type: INTEGER
+      - desc: sum(list of floats)
+        expr: sum([1.1,2.2,3.3])
+        result:
+          value: 6.6
+          type: FLOAT
+      - desc: sum(mixed list)
+        expr: sum([3.4, 100, -1.2, 0])
+        result:
+          value: 102.2
+          type: FLOAT
+      - desc: sum(empty list)
+        expr: sum([])
+        result:
+          value: 0
+          type: INTEGER
+      - desc: sum(null)
+        expr: sum($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: UNTYPED
+      - desc: sum(bad types)
+        expr: sum([1, 2, 'foo'])
+        error: Not integer or float
+
+  - desc: average()
+    tests:
+      - desc: average(list of integers)
+        expr: average([1,2,3])
+        result:
+          value: 2.0
+          type: FLOAT
+      - desc: average(list of floats)
+        expr: average([1.1,2.2,3.3])
+        result:
+          value: 2.1999999999999997
+          type: FLOAT
+      - desc: average(mixed list)
+        expr: average([3.4, 100, -1.2, 0])
+        result:
+          value: 25.55
+          type: FLOAT
+      - desc: average(empty list)
+        expr: average([])
+        result:
+          value: null
+          type: UNTYPED
+      - desc: average(null)
+        expr: average($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: UNTYPED
+      - desc: average(bad types)
+        expr: average([1, 2, 'foo'])
+        error: Not integer or float
+
+  - desc: all()
+    tests:
+      - desc: all(list of true booleans)
+        expr: all([True, True])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: all(list of mixed booleans)
+        expr: all([True, True, False])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: all(list of mixed)
+        expr: all([True, 1, 'foo', 1.23])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: all(empty list)
+        expr: all([])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: all(null)
+        expr: all($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: any()
+    tests:
+      - desc: any(list of true booleans)
+        expr: any([True, True])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: any(list of mixed booleans)
+        expr: any([True, True, False])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: any(list of mixed)
+        expr: any([0, False, '', 0.0])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: any(empty list)
+        expr: any([])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: any(null)
+        expr: any($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: none()
+    tests:
+      - desc: none(list of false booleans)
+        expr: none([False, False])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: none(list of mixed booleans)
+        expr: none([True, True, False])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: none(list of mixed)
+        expr: none([False, 0, '', 0.0])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: none(empty list)
+        expr: none([])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: none(null)
+        expr: none($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: count()
+    tests:
+      - desc: count(empty list)
+        expr: count([])
+        result:
+          value: 0
+          type: INTEGER
+      - desc: count(list of booleans)
+        expr: count([True, False, False, True])
+        result:
+          value: 2
+          type: INTEGER
+      - desc: count(list of mixed)
+        expr: count([1, 0, True, False, 'foo', '', 1.23, 0.0])
+        result:
+          value: 4
+          type: INTEGER
+      - desc: count(null)
+        expr: count($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: 0
+          type: INTEGER
+
+  - desc: in()
+    tests:
+      - desc: in(integer, list)
+        expr: in(123, ['foo', Null, 123, True])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: in(null, list)
+        expr: in(Null, ['foo', Null, 123, True])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: in(string, string)
+        expr: in('bar', 'foobar')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: in(integer, null list)
+        expr: in(123, $test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: in(string, null string)
+        expr: in('foobar', $test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: in(null string, string)
+        expr: in($test, 'foobar')
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: in(string, integer)
+        expr: in('bar', 123)
+        error: Cannot search in integer
+
+  - desc: length()
+    tests:
+      - desc: length(string)
+        expr: length('foobar')
+        result:
+          value: 6
+          type: INTEGER
+      - desc: length(empty string)
+        expr: length('')
+        result:
+          value: 0
+          type: INTEGER
+      - desc: length(list)
+        expr: length([1, 2, 'foo'])
+        result:
+          value: 3
+          type: INTEGER
+      - desc: length(empty list)
+        expr: length([])
+        result:
+          value: 0
+          type: INTEGER
+      - desc: length(null)
+        expr: length($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: 0
+          type: INTEGER
+
+  - desc: head()
+    tests:
+      - desc: head(string)
+        expr: head('foobar')
+        result:
+          value: f
+          type: STRING
+      - desc: head(string, integer)
+        expr: head('foobar', 4)
+        result:
+          value: foob
+          type: STRING
+      - desc: head(string, float)
+        expr: head('foobar', 4.56)
+        result:
+          value: foob
+          type: STRING
+      - desc: head(empty string)
+        expr: head('')
+        result:
+          value: ''
+          type: STRING
+      - desc: head(null string)
+        expr: head($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+      - desc: head(list)
+        expr: head([1, 2, 'foo'])
+        result:
+          value: [1]
+          type: LIST
+      - desc: head(list, integer)
+        expr: head([1, 2, 'foo'], 2)
+        result:
+          value: [1, 2]
+          type: LIST
+      - desc: head(list, float)
+        expr: head([1, 2, 'foo'], 2.345)
+        result:
+          value: [1, 2]
+          type: LIST
+      - desc: head(empty list)
+        expr: head([])
+        result:
+          value: []
+          type: LIST
+      - desc: head(null list)
+        expr: head($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: LIST
+
+  - desc: tail()
+    tests:
+      - desc: tail(string)
+        expr: tail('foobar')
+        result:
+          value: r
+          type: STRING
+      - desc: tail(string, integer)
+        expr: tail('foobar', 4)
+        result:
+          value: obar
+          type: STRING
+      - desc: tail(string, float)
+        expr: tail('foobar', 4.56)
+        result:
+          value: obar
+          type: STRING
+      - desc: tail(empty string)
+        expr: tail('')
+        result:
+          value: ''
+          type: STRING
+      - desc: tail(null string)
+        expr: tail($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+      - desc: tail(list)
+        expr: tail([1, 2, 'foo'])
+        result:
+          value: ['foo']
+          type: LIST
+      - desc: tail(list, integer)
+        expr: tail([1, 2, 'foo'], 2)
+        result:
+          value: [2, 'foo']
+          type: LIST
+      - desc: tail(list, float)
+        expr: tail([1, 2, 'foo'], 2.345)
+        result:
+          value: [2, 'foo']
+          type: LIST
+      - desc: tail(empty list)
+        expr: tail([])
+        result:
+          value: []
+          type: LIST
+      - desc: tail(null list)
+        expr: tail($test)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: LIST
+
+  - desc: concat()
+    tests:
+      - desc: concat(string)
+        expr: concat('foo')
+        result:
+          value: foo
+          type: STRING
+      - desc: concat(string, string)
+        expr: concat('foo', 'bar')
+        result:
+          value: foobar
+          type: STRING
+      - desc: concat(string, string, string)
+        expr: concat('foo', 'bar', 'baz')
+        result:
+          value: foobarbaz
+          type: STRING
+      - desc: concat(string, null, string)
+        expr: concat('foo', $test, 'baz')
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: foobaz
+          type: STRING
+      - desc: concat(list)
+        expr: concat([1, 2])
+        result:
+          value: [1, 2]
+          type: LIST
+      - desc: concat(list, list)
+        expr: concat([1, 2], [3])
+        result:
+          value: [1, 2, 3]
+          type: LIST
+      - desc: concat(list, list, list)
+        expr: concat([1, 2], [3], ['foo', 'bar'])
+        result:
+          value: [1, 2, 3, 'foo', 'bar']
+          type: LIST
+      - desc: concat(string, integer)
+        expr: concat('foo', 123)
+        error: Cannot concatenate mixed types
+      - desc: concat(string, list)
+        expr: concat('foo', [123])
+        error: Cannot concatenate mixed types
+
+  - desc: at()
+    tests:
+      - desc: at(string, integer)
+        expr: at('foobar', 2)
+        result:
+          value: o
+          type: STRING
+      - desc: at(string, negative integer)
+        expr: at('foobar', -2)
+        result:
+          value: a
+          type: STRING
+      - desc: at(empty string, integer)
+        expr: at('', 2)
+        result:
+          value: null
+          type: UNTYPED
+      - desc: at(string, null)
+        expr: at('foobar', $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        error: Position cannot be null
+      - desc: at(string, out of bounds integer)
+        expr: at('foobar', 999)
+        error: Position out of bounds
+      - desc: at(null string, integer)
+        expr: at($test, 2)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: UNTYPED
+      - desc: at(list, integer)
+        expr: at([1, 2, 3, 4], 2)
+        result:
+          value: 3
+          type: INTEGER
+      - desc: at(list, negative integer)
+        expr: at([1, 2, 3, 4], -3)
+        result:
+          value: 2
+          type: INTEGER
+      - desc: at(empty list, integer)
+        expr: at([], 2)
+        result:
+          value: null
+          type: UNTYPED
+      - desc: at(list, null)
+        expr: at([1, 2, 3, 4], $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        error: Position cannot be null
+      - desc: at(list, out of bounds integer)
+        expr: at([1, 2, 3, 4], 999)
+        error: Position out of bounds
+      - desc: at(null list, integer)
+        expr: at($test, 2)
+        vars:
+          test:
+            value: null
+            type: LIST
+        result:
+          value: null
+          type: UNTYPED
+
+  - desc: slice()
+    tests:
+      - desc: slice(string, integer)
+        expr: slice('foobar', 2)
+        result:
+          value: obar
+          type: STRING
+      - desc: slice(string, negative integer)
+        expr: slice('foobar', -2)
+        result:
+          value: ar
+          type: STRING
+      - desc: slice(string, out of bounds integer)
+        expr: slice('foobar', 9999)
+        result:
+          value: ''
+          type: STRING
+      - desc: slice(empty string, integer)
+        expr: slice('', 2)
+        result:
+          value: ''
+          type: STRING
+      - desc: slice(string, integer, integer)
+        expr: slice('foobar', 2, 4)
+        result:
+          value: ob
+          type: STRING
+      - desc: slice(string, negative integer, negative integer)
+        expr: slice('foobar', -2, -1)
+        result:
+          value: a
+          type: STRING
+      - desc: slice(string, out of bounds integer, integer)
+        expr: slice('foobar', 9999, 2)
+        result:
+          value: ''
+          type: STRING
+      - desc: slice(empty string, integer, integer)
+        expr: slice('', 2, 7)
+        result:
+          value: ''
+          type: STRING
+      - desc: slice(list, integer)
+        expr: slice(['f','o','o','b','a','r'], 2)
+        result:
+          value: ['o', 'b', 'a', 'r']
+          type: LIST
+      - desc: slice(list, negative integer)
+        expr: slice(['f','o','o','b','a','r'], -2)
+        result:
+          value: ['a', 'r']
+          type: LIST
+      - desc: slice(list, out of bounds integer)
+        expr: slice(['f','o','o','b','a','r'], 9999)
+        result:
+          value: []
+          type: LIST
+      - desc: slice(empty list, integer)
+        expr: slice([], 2)
+        result:
+          value: []
+          type: LIST
+      - desc: slice(list, integer, integer)
+        expr: slice(['f','o','o','b','a','r'], 2, 4)
+        result:
+          value: ['o', 'b']
+          type: LIST
+      - desc: slice(list, negative integer, negative integer)
+        expr: slice(['f','o','o','b','a','r'], -2, -1)
+        result:
+          value: ['a']
+          type: LIST
+      - desc: slice(list, out of bounds integer, integer)
+        expr: slice(['f','o','o','b','a','r'], 9999, 2)
+        result:
+          value: []
+          type: LIST
+      - desc: slice(empty list, integer, integer)
+        expr: slice([], 2, 7)
+        result:
+          value: []
+          type: LIST
+
+  - desc: property()
+    tests:
+      - desc: property(record, string)
+        expr: property($test, 'foo')
+        vars:
+          test:
+            value:
+              foo: 3
+            type: RECORD
+        result:
+          value: 3
+          type: INTEGER
+      - desc: Non-existent property
+        expr: property($test, 'foo')
+        vars:
+          test:
+            value:
+              bar: 3
+            type: RECORD
+        error: Property does not exist
+      - desc: property(record, null string)
+        expr: property($test, $prop)
+        vars:
+          test:
+            value:
+              bar: 3
+            type: RECORD
+          prop:
+            value: null
+            type: STRING
+        error: Property cannot be null
+      - desc: null record
+        expr: property($test, 'foo')
+        vars:
+          test:
+            value: null
+            type: RECORD
+        result:
+          value: null
+          type: UNTYPED
+
+  - desc: negative()
+    tests:
+      - desc: negative(zero integer)
+        expr: negative(0)
+        result:
+          value: 0
+          type: INTEGER
+      - desc: negative(positive integer)
+        expr: negative(123)
+        result:
+          value: -123
+          type: INTEGER
+      - desc: negative(negative integer)
+        expr: negative(-123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: negative(null integer)
+        expr: negative($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: negative(zero float)
+        expr: negative(0.0)
+        result:
+          value: 0.0
+          type: FLOAT
+      - desc: negative(positive float)
+        expr: negative(12.34)
+        result:
+          value: -12.34
+          type: FLOAT
+      - desc: negative(negative float)
+        expr: negative(-12.34)
+        result:
+          value: 12.34
+          type: FLOAT
+      - desc: negative(null float)
+        expr: negative($test)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: add()
+    tests:
+      - desc: add(int, int)
+        expr: add(123, 456)
+        result:
+          value: 579
+          type: INTEGER
+      - desc: add(int, float)
+        expr: add(123, 456.12)
+        result:
+          value: 579.12
+          type: FLOAT
+      - desc: add(float, int)
+        expr: add(123.12, 456)
+        result:
+          value: 579.12
+          type: FLOAT
+      - desc: add(float, float)
+        expr: add(123.12, 456.55)
+        result:
+          value: 579.6700000000001
+          type: FLOAT
+      - desc: add(int, null)
+        expr: add(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: add(null, int)
+        expr: add($test, 123)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+      - desc: add(date, int)
+        expr: add(date(2018, 4, 2), 7)
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: add(int, date)
+        expr: add(7, date(2018, 4, 2))
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: add(date, float)
+        expr: add(date(2018, 4, 2), 7.5)
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: add(float, date)
+        expr: add(7.5, date(2018, 4, 2))
+        result:
+          value: "2018-04-09"
+          type: DATE
+      - desc: add(datetime, int)
+        expr: add(datetime(2018, 4, 2, 12, 34, 56), 7)
+        result:
+          value: "2018-04-09T12:34:56"
+          type: DATETIME
+      - desc: add(int, datetime)
+        expr: add(7, datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: "2018-04-09T12:34:56"
+          type: DATETIME
+      - desc: add(datetime, float)
+        expr: add(datetime(2018, 4, 2, 12, 34, 56), 7.5)
+        result:
+          value: "2018-04-10T00:34:56"
+          type: DATETIME
+      - desc: add(float, datetime)
+        expr: add(7.5, datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: "2018-04-10T00:34:56"
+          type: DATETIME
+      - desc: add(time, int)
+        expr: add(time(12, 34, 56), 7)
+        result:
+          value: "12:35:03"
+          type: TIME
+      - desc: add(int, time)
+        expr: add(7, time(12, 34, 56))
+        result:
+          value: "12:35:03"
+          type: TIME
+      - desc: add(time, float)
+        expr: add(time(12, 34, 56), 7.5)
+        result:
+          value: "12:35:03.5"
+          type: TIME
+      - desc: add(float, time)
+        expr: add(7.5, time(12, 34, 56))
+        result:
+          value: "12:35:03.5"
+          type: TIME
+      - desc: add(date, null)
+        expr: add(date(2018, 4, 2), $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: DATE
+      - desc: add(time, null)
+        expr: add(time(12, 34, 56), $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: TIME
+
+  - desc: subtract()
+    tests:
+      - desc: subtract(int, int)
+        expr: subtract(456, 123)
+        result:
+          value: 333
+          type: INTEGER
+      - desc: subtract(int, float)
+        expr: subtract(123, 456.12)
+        result:
+          value: -333.12
+          type: FLOAT
+      - desc: subtract(float, int)
+        expr: subtract(123.12, 23)
+        result:
+          value: 100.12
+          type: FLOAT
+      - desc: subtract(float, float)
+        expr: subtract(123.12, 3.12)
+        result:
+          value: 120.0
+          type: FLOAT
+      - desc: subtract(int, null)
+        expr: subtract(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: subtract(null, int)
+        expr: subtract($test, 123)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+      - desc: subtract(date, int)
+        expr: subtract(date(2018, 4, 2), 7)
+        result:
+          value: "2018-03-26"
+          type: DATE
+      - desc: subtract(date, float)
+        expr: subtract(date(2018, 4, 2), 7.5)
+        result:
+          value: "2018-03-25"
+          type: DATE
+      - desc: subtract(datetime, int)
+        expr: subtract(datetime(2018, 4, 2, 12, 34, 56), 7)
+        result:
+          value: "2018-03-26T12:34:56"
+          type: DATETIME
+      - desc: subtract(datetime, float)
+        expr: subtract(datetime(2018, 4, 2, 12, 34, 56), 7.5)
+        result:
+          value: "2018-03-26T00:34:56"
+          type: DATETIME
+      - desc: subtract(date, date)
+        expr: subtract(date(2018, 4, 9), date(2018, 4, 2))
+        result:
+          value: 7
+          type: INTEGER
+      - desc: subtract(datetime, date)
+        expr: subtract(datetime(2018, 4, 9, 12, 34, 56), date(2018, 4, 2))
+        result:
+          value: 7.524259259259259
+          type: FLOAT
+      - desc: subtract(date, datetime)
+        expr: subtract(date(2018, 4, 9), datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 6.475740740740741
+          type: FLOAT
+      - desc: subtract(datetime, datetime)
+        expr: subtract(datetime(2018, 4, 9, 12, 34, 56), datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 7.0
+          type: FLOAT
+      - desc: subtract(time, int)
+        expr: subtract(time(12, 34, 56), 7)
+        result:
+          value: "12:34:49"
+          type: TIME
+      - desc: subtract(time, float)
+        expr: subtract(time(12, 34, 56), 7.5)
+        result:
+          value: "12:34:48.5"
+          type: TIME
+      - desc: subtract(time, time)
+        expr: subtract(time(12, 34, 56, 123), time(5, 6, 7))
+        result:
+          value: 26929.123
+          type: FLOAT
+      - desc: subtract(date, null integer)
+        expr: subtract(date(2018, 4, 2), $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: DATE
+      - desc: subtract(date, null date)
+        expr: subtract(date(2018, 4, 2), $test)
+        vars:
+          test:
+            value: null
+            type: DATE
+        result:
+          value: null
+          type: INTEGER
+      - desc: subtract(time, null integer)
+        expr: subtract(time(12, 34, 56), $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: TIME
+      - desc: subtract(time, null time)
+        expr: subtract(time(12, 34, 56), $test)
+        vars:
+          test:
+            value: null
+            type: TIME
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: multiply()
+    tests:
+      - desc: multiply(int, int)
+        expr: multiply(123, 456)
+        result:
+          value: 56088
+          type: INTEGER
+      - desc: multiply(int, float)
+        expr: multiply(123, 456.12)
+        result:
+          value: 56102.76
+          type: FLOAT
+      - desc: multiply(float, int)
+        expr: multiply(123.12, 456)
+        result:
+          value: 56142.72
+          type: FLOAT
+      - desc: multiply(float, float)
+        expr: multiply(123.12, 456.55)
+        result:
+          value: 56210.436
+          type: FLOAT
+      - desc: multiply(int, null)
+        expr: multiply(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: multiply(null, int)
+        expr: multiply($test, 123)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: divide()
+    tests:
+      - desc: divide(int, int)
+        expr: divide(456, 100)
+        result:
+          value: 4.56
+          type: FLOAT
+      - desc: divide(int, float)
+        expr: divide(123, 456.12)
+        result:
+          value: 0.26966587740068404
+          type: FLOAT
+      - desc: divide(float, int)
+        expr: divide(123.12, 23)
+        result:
+          value: 5.35304347826087
+          type: FLOAT
+      - desc: divide(float, float)
+        expr: divide(123.12, 3.12)
+        result:
+          value: 39.46153846153846
+          type: FLOAT
+      - desc: Zero Numerator
+        expr: divide(0, 100)
+        result:
+          value: 0.0
+          type: FLOAT
+      - desc: divide(int, null)
+        expr: divide(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+      - desc: divide(null, int)
+        expr: divide($test, 123)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+      - desc: Zero Denominator
+        expr: divide(10, 0)
+        error: Cannot divide by zero
+
+  - desc: modulo()
+    tests:
+      - desc: modulo(int, int)
+        expr: modulo(456, 100)
+        result:
+          value: 56
+          type: INTEGER
+      - desc: modulo(int, float)
+        expr: modulo(123, 456.12)
+        result:
+          value: 123.0
+          type: FLOAT
+      - desc: modulo(float, int)
+        expr: modulo(123.12, 23)
+        result:
+          value: 8.120000000000005
+          type: FLOAT
+      - desc: modulo(float, float)
+        expr: modulo(123.12, 3.12)
+        result:
+          value: 1.4400000000000004
+          type: FLOAT
+      - desc: modulo(int, null)
+        expr: modulo(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: modulo(null, int)
+        expr: modulo($test, 123)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: pow()
+    tests:
+      - desc: pow(int, int)
+        expr: pow(2, 7)
+        result:
+          value: 128
+          type: INTEGER
+      - desc: pow(int, float)
+        expr: pow(3, 2.4)
+        result:
+          value: 13.966610165238235
+          type: FLOAT
+      - desc: pow(float, int)
+        expr: pow(14.12, 3)
+        result:
+          value: 2815.1665279999997
+          type: FLOAT
+      - desc: pow(float, float)
+        expr: pow(14.12, 2.4)
+        result:
+          value: 574.9145131467701
+          type: FLOAT
+      - desc: pow(int, null)
+        expr: pow(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: pow(null, int)
+        expr: pow($test, 123)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: abs()
+    tests:
+      - desc: abs(negative integer)
+        expr: abs(-123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: abs(positive integer)
+        expr: abs(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: abs(negative float)
+        expr: abs(-123.45)
+        result:
+          value: 123.45
+          type: FLOAT
+      - desc: abs(positive float)
+        expr: abs(-123.45)
+        result:
+          value: 123.45
+          type: FLOAT
+      - desc: abs(null)
+        expr: abs($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: ceil()
+    tests:
+      - desc: ceil(integer)
+        expr: ceil(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: ceil(float)
+        expr: ceil(12.34)
+        result:
+          value: 13
+          type: INTEGER
+      - desc: ceil(null)
+        expr: ceil($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: floor()
+    tests:
+      - desc: floor(integer)
+        expr: floor(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: floor(float)
+        expr: floor(12.34)
+        result:
+          value: 12
+          type: INTEGER
+      - desc: floor(negative float)
+        expr: floor(-12.34)
+        result:
+          value: -13
+          type: INTEGER
+      - desc: floor(null)
+        expr: floor($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: trunc()
+    tests:
+      - desc: trunc(integer)
+        expr: trunc(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: trunc(float)
+        expr: trunc(12.34)
+        result:
+          value: 12
+          type: INTEGER
+      - desc: trunc(negative float)
+        expr: trunc(-12.34)
+        result:
+          value: -12
+          type: INTEGER
+      - desc: trunc(null)
+        expr: trunc($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: round()
+    tests:
+      - desc: round(integer)
+        expr: round(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: round(float)
+        expr: round(12.34)
+        result:
+          value: 12
+          type: INTEGER
+      - desc: round(0.5)
+        expr: round(0.5)
+        result:
+          value: 0
+          type: INTEGER
+      - desc: round(1.5)
+        expr: round(1.5)
+        result:
+          value: 2
+          type: INTEGER
+      - desc: round(null)
+        expr: round($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: INTEGER
+      - desc: round(integer, integer)
+        expr: round(123, -1)
+        result:
+          value: 120.0
+          type: FLOAT
+      - desc: round(float, integer)
+        expr: round(12.345, 2)
+        result:
+          value: 12.34
+          type: FLOAT
+      - desc: round(null, integer)
+        expr: round($test, 2)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+      - desc: round(float, null)
+        expr: round(12.345, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: sin()
+    tests:
+      - desc: sin(integer)
+        expr: sin(123)
+        result:
+          value: -0.45990349068959124
+          type: FLOAT
+      - desc: sin(float)
+        expr: sin(12.34)
+        result:
+          value: -0.22444221895185537
+          type: FLOAT
+      - desc: sin(null)
+        expr: sin($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: cos()
+    tests:
+      - desc: cos(integer)
+        expr: cos(123)
+        result:
+          value: -0.8879689066918555
+          type: FLOAT
+      - desc: cos(float)
+        expr: cos(12.34)
+        result:
+          value: 0.9744873987650982
+          type: FLOAT
+      - desc: cos(null)
+        expr: cos($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: tan()
+    tests:
+      - desc: tan(integer)
+        expr: tan(123)
+        result:
+          value: 0.5179274715856551
+          type: FLOAT
+      - desc: tan(float)
+        expr: tan(12.34)
+        result:
+          value: -0.23031823627096235
+          type: FLOAT
+      - desc: tan(null)
+        expr: tan($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: log()
+    tests:
+      - desc: log(integer, float)
+        expr: log(42, 12.34)
+        result:
+          value: 1.4874248524580733
+          type: FLOAT
+      - desc: log(float, integer)
+        expr: log(1.23, 10)
+        result:
+          value: 0.08990511143939793
+          type: FLOAT
+      - desc: log(null, integer)
+        expr: log($test, 10)
+        vars:
+          test:
+            value: null
+            type: FLOAT
+        result:
+          value: null
+          type: FLOAT
+      - desc: log(integer, null)
+        expr: log(123, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: sqrt()
+    tests:
+      - desc: sqrt(integer)
+        expr: sqrt(25)
+        result:
+          value: 5.0
+          type: FLOAT
+      - desc: sqrt(float)
+        expr: sqrt(12.34)
+        result:
+          value: 3.5128336140500593
+          type: FLOAT
+      - desc: sqrt(null)
+        expr: sqrt($test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: hypot()
+    tests:
+      - desc: hypot(integer, float)
+        expr: hypot(25, 12.34)
+        result:
+          value: 27.879662838707358
+          type: FLOAT
+      - desc: hypot(float, integer)
+        expr: hypot(12.34, 123)
+        result:
+          value: 123.61745669605082
+          type: FLOAT
+      - desc: hypot(null, integer)
+        expr: hypot($test, 12)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+      - desc: hypot(float, null)
+        expr: hypot(12.34, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: null
+          type: FLOAT
+
+  - desc: random()
+    tests:
+      - desc: random()
+        expr: random()
+        result:
+          type: FLOAT
+
+  - desc: Numeric Constants
+    tests:
+      - desc: pi()
+        expr: pi()
+        result:
+          value: 3.141592653589793
+          type: FLOAT
+      - desc: e()
+        expr: e()
+        result:
+          value: 2.718281828459045
+          type: FLOAT
+
+  - desc: and()
+    tests:
+      - desc: and(true, true)
+        expr: and(True, True)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: and(true, false)
+        expr: and(True, False)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: and(false, false)
+        expr: and(False, False)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: and(bool, float)
+        expr: and(True, 1.213232)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: and(bool, integer)
+        expr: and(True, 123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: and(bool, string)
+        expr: and(True, 'foo')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: and(bool, list)
+        expr: and(True, [1])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: and(bool, null)
+        expr: and(True, Null)
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: or()
+    tests:
+      - desc: or(true, false)
+        expr: or(True, False)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: or(true, true)
+        expr: or(True, True)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: or(false, false)
+        expr: or(False, False)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: or(bool, float)
+        expr: or(False, 1.213232)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: or(bool, integer)
+        expr: or(False, 123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: or(bool, string)
+        expr: or(False, 'foo')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: or(bool, list)
+        expr: or(False, [1])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: or(bool, null)
+        expr: or(True, Null)
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: xor()
+    tests:
+      - desc: xor(true, false)
+        expr: xor(True, False)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: xor(true, true)
+        expr: xor(True, True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: xor(false, false)
+        expr: xor(False, False)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: xor(bool, float)
+        expr: xor(False, 1.213232)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: xor(bool, integer)
+        expr: xor(False, 123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: xor(bool, string)
+        expr: xor(False, 'foo')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: xor(bool, list)
+        expr: xor(False, [1])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: xor(bool, null)
+        expr: xor(False, Null)
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: if()
+    tests:
+      - desc: Simple; True Predicate
+        expr: if(True, 'foo', 'bar')
+        result:
+          value: foo
+          type: STRING
+      - desc: Simple; No True Predicate
+        expr: if(False, 'foo', 'bar')
+        result:
+          value: bar
+          type: STRING
+      - desc: Multiple; True Predicate
+        expr: if(False, 'foo', True, 123, ['a','b'])
+        result:
+          value: 123
+          type: INTEGER
+      - desc: Multiple; No True Predicate
+        expr: if(False, 'foo', False, 123, ['a','b'])
+        result:
+          value: [a, b]
+          type: LIST
+      - desc: if()
+        expr: if()
+        error: Wrong number of arguments
+      - desc: if(true)
+        expr: if(True)
+        error: Wrong number of arguments
+      - desc: if(true, string)
+        expr: if(True, 'foo')
+        error: Wrong number of arguments
+
+  - desc: switch()
+    tests:
+      - desc: Simple; Match
+        expr: switch(42, 42, 'matched', 'not matched')
+        result:
+          value: matched
+          type: STRING
+      - desc: Simple; No Match
+        expr: switch(41, 42, 'matched', 'not matched')
+        result:
+          value: not matched
+          type: STRING
+      - desc: Multiple; Match
+        expr: switch(42, 13, 'thirteen', 42, 'forty two', 'not matched')
+        result:
+          value: forty two
+          type: STRING
+      - desc: Multiple; No Match
+        expr: switch(41, 13, 'thirteen', 42, 'forty two', 'not matched')
+        result:
+          value: not matched
+          type: STRING
+      - desc: switch()
+        expr: switch()
+        error: Wrong number of arguments
+      - desc: switch(integer)
+        expr: switch(42)
+        error: Wrong number of arguments
+      - desc: switch(integer, integer)
+        expr: switch(42, 13)
+        error: Wrong number of arguments
+      - desc: switch(integer, integer, string)
+        expr: switch(42, 13, 'thirteen')
+        error: Wrong number of arguments
+
+  - desc: integer()
+    tests:
+      - desc: integer(integer)
+        expr: integer(123)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: integer(float)
+        expr: integer(123.456)
+        result:
+          value: 123
+          type: INTEGER
+      - desc: integer(string)
+        expr: integer('123')
+        result:
+          value: 123
+          type: INTEGER
+      - desc: integer(bad string)
+        expr: integer('foo')
+        error: Not an integer
+      - desc: integer(True)
+        expr: integer(True)
+        result:
+          value: 1
+          type: INTEGER
+      - desc: integer(False)
+        expr: integer(False)
+        result:
+          value: 0
+          type: INTEGER
+      - desc: integer(null)
+        expr: integer(Null)
+        result:
+          value: null
+          type: INTEGER
+      - desc: integer(list)
+        expr: integer([1,2,3])
+        error: Cannot cast a list
+      - desc: integer(record)
+        expr: integer(record('foo', 123))
+        error: Cannot cast a record
+      - desc: integer(date)
+        expr: integer(date(2018, 4, 1))
+        error: Cannot cast a date
+      - desc: integer(time)
+        expr: integer(time(12, 34, 56))
+        error: Cannot cast a time
+      - desc: integer(datetime)
+        expr: integer(datetime(2018, 4, 1, 12, 34, 56))
+        error: Cannot cast a datetime
+
+  - desc: isInteger()
+    tests:
+      - desc: isInteger(integer)
+        expr: isInteger(123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isInteger(float)
+        expr: isInteger(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(string)
+        expr: isInteger('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(boolean)
+        expr: isInteger(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(list)
+        expr: isInteger([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(record)
+        expr: isInteger(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(null)
+        expr: isInteger(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(date)
+        expr: isInteger(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(time)
+        expr: isInteger(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isInteger(datetime)
+        expr: isInteger(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: float()
+    tests:
+      - desc: float(integer)
+        expr: float(123)
+        result:
+          value: 123.0
+          type: FLOAT
+      - desc: float(float)
+        expr: float(123.456)
+        result:
+          value: 123.456
+          type: FLOAT
+      - desc: float(string)
+        expr: float('123.456')
+        result:
+          value: 123.456
+          type: FLOAT
+      - desc: float(bad string)
+        expr: float('foo')
+        error: Not a float
+      - desc: float(True)
+        expr: float(True)
+        result:
+          value: 1.0
+          type: FLOAT
+      - desc: float(False)
+        expr: float(False)
+        result:
+          value: 0.0
+          type: FLOAT
+      - desc: float(null)
+        expr: float(Null)
+        result:
+          value: null
+          type: FLOAT
+      - desc: float(list)
+        expr: float([1,2,3])
+        error: Cannot cast a list
+      - desc: float(record)
+        expr: float(record('foo', 123))
+        error: Cannot cast a record
+      - desc: float(date)
+        expr: float(date(2018, 4, 1))
+        error: Cannot cast a date
+      - desc: float(time)
+        expr: float(time(12, 34, 56))
+        error: Cannot cast a time
+      - desc: float(datetime)
+        expr: float(datetime(2018, 4, 1, 12, 34, 56))
+        error: Cannot cast a datetime
+
+  - desc: isFloat()
+    tests:
+      - desc: isFloat(integer)
+        expr: isFloat(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(float)
+        expr: isFloat(123.456)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isFloat(string)
+        expr: isFloat('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(boolean)
+        expr: isFloat(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(list)
+        expr: isFloat([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(record)
+        expr: isFloat(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(null)
+        expr: isFloat(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(date)
+        expr: isFloat(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(time)
+        expr: isFloat(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isFloat(datetime)
+        expr: isFloat(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: string()
+    tests:
+      - desc: string(integer)
+        expr: string(123)
+        result:
+          value: '123'
+          type: STRING
+      - desc: string(float)
+        expr: string(123.456)
+        result:
+          value: '123.456'
+          type: STRING
+      - desc: string(string)
+        expr: string('foo')
+        result:
+          value: foo
+          type: STRING
+      - desc: string(True)
+        expr: string(True)
+        result:
+          value: "True"
+          type: STRING
+      - desc: string(False)
+        expr: string(False)
+        result:
+          value: "False"
+          type: STRING
+      - desc: string(null)
+        expr: string(Null)
+        result:
+          value: null
+          type: STRING
+      - desc: string(date)
+        expr: string(date(2018, 4, 1))
+        result:
+          value: "2018-04-01"
+          type: STRING
+      - desc: string(time)
+        expr: string(time(12, 34, 56))
+        result:
+          value: "12:34:56"
+          type: STRING
+      - desc: string(datetime)
+        expr: string(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: "2018-04-01T12:34:56"
+          type: STRING
+
+  - desc: isString()
+    tests:
+      - desc: isString(integer)
+        expr: isString(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(float)
+        expr: isString(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(string)
+        expr: isString('foo')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isString(boolean)
+        expr: isString(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(list)
+        expr: isString([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(record)
+        expr: isString(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(null)
+        expr: isString(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(date)
+        expr: isString(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(time)
+        expr: isString(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isString(datetime)
+        expr: isString(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: boolean()
+    tests:
+      - desc: boolean(integer)
+        expr: boolean(123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: boolean(integer; zero)
+        expr: boolean(0)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: boolean(float)
+        expr: boolean(123.456)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: boolean(float)
+        expr: boolean(0)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: boolean(string)
+        expr: boolean('foo')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: boolean(empty string)
+        expr: boolean('')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: boolean(True)
+        expr: boolean(True)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: boolean(False)
+        expr: boolean(False)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: boolean(null)
+        expr: boolean(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: boolean(date)
+        expr: boolean(date(2018, 4, 1))
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: boolean(time)
+        expr: boolean(time(12, 34, 56))
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: boolean(datetime)
+        expr: boolean(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: isBoolean()
+    tests:
+      - desc: isBoolean(integer)
+        expr: isBoolean(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(float)
+        expr: isBoolean(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(string)
+        expr: isBoolean('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(boolean)
+        expr: isBoolean(True)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isBoolean(list)
+        expr: isBoolean([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(record)
+        expr: isBoolean(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(null)
+        expr: isBoolean(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(date)
+        expr: isBoolean(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(time)
+        expr: isBoolean(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isBoolean(datetime)
+        expr: isBoolean(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: list()
+    tests:
+      - desc: list(integer)
+        expr: list(123)
+        result:
+          value: [123]
+          type: LIST
+      - desc: list(float)
+        expr: list(123.456)
+        result:
+          value: [123.456]
+          type: LIST
+      - desc: list(string)
+        expr: list('foo')
+        result:
+          value: ['foo']
+          type: LIST
+      - desc: list(boolean)
+        expr: list(True)
+        result:
+          value: [true]
+          type: LIST
+      - desc: list(list)
+        expr: list(123, 'foo', False)
+        result:
+          value: [123, 'foo', false]
+          type: LIST
+      - desc: list(null)
+        expr: list(Null)
+        result:
+          value: [null]
+          type: LIST
+
+  - desc: isList()
+    tests:
+      - desc: isList(integer)
+        expr: isList(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(float)
+        expr: isList(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(string)
+        expr: isList('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(boolean)
+        expr: isList(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(list)
+        expr: isList([123])
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isList(record)
+        expr: isList(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(null)
+        expr: isList(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(date)
+        expr: isList(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(time)
+        expr: isList(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isList(datetime)
+        expr: isList(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: record()
+    tests:
+      - desc: record(string, integer)
+        expr: record('foo', 123)
+        result:
+          value:
+            foo: 123
+          type: RECORD
+      - desc: record(string, integer, string, boolean)
+        expr: record('foo', 123, 'bar', True)
+        result:
+          value:
+            foo: 123
+            bar: True
+          type: RECORD
+      - desc: record(string, integer, string, record)
+        expr: record('foo', 123, 'bar', record('baz', 123.45))
+        result:
+          value:
+            foo: 123
+            bar:
+              baz: 123.45
+          type: RECORD
+      - desc: record()
+        expr: record()
+        error: Wrong number of arguments
+      - desc: record(string, integer, string)
+        expr: record('foo', 123, 'bar')
+        error: Wrong number of arguments
+      - desc: record(integer, string)
+        expr: record(123, 'foo')
+        error: Properties must be strings
+      - desc: record(null, string)
+        expr: record($test, 'foo')
+        vars:
+          test:
+            value: null
+            type: STRING
+        error: Properties cannot be null
+
+  - desc: isRecord()
+    tests:
+      - desc: isRecord(integer)
+        expr: isRecord(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(float)
+        expr: isRecord(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(string)
+        expr: isRecord('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(boolean)
+        expr: isRecord(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(list)
+        expr: isRecord([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(record)
+        expr: isRecord(record('foo', 123))
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isRecord(null)
+        expr: isRecord(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(date)
+        expr: isRecord(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(time)
+        expr: isRecord(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isRecord(datetime)
+        expr: isRecord(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: date()
+    tests:
+      - desc: date(integer)
+        expr: date(123)
+        error: Cannot cast an integer
+      - desc: date(float)
+        expr: date(123.456)
+        error: Cannot cast a float
+      - desc: date(string)
+        expr: date('2018-04-01')
+        result:
+          value: "2018-04-01"
+          type: DATE
+      - desc: date(bad string)
+        expr: date('foo')
+        error: Not a date
+      - desc: date(True)
+        expr: date(True)
+        error: Cannot cast a boolean
+      - desc: date(False)
+        expr: date(False)
+        error: Cannot cast a boolean
+      - desc: date(null)
+        expr: date(Null)
+        result:
+          value: null
+          type: DATE
+      - desc: date(list)
+        expr: date([1,2,3])
+        error: Cannot cast a list
+      - desc: date(record)
+        expr: date(record('foo', 123))
+        error: Cannot cast a record
+      - desc: date(date)
+        expr: date(date(2018, 4, 1))
+        result:
+          value: "2018-04-01"
+          type: DATE
+      - desc: date(time)
+        expr: date(time(12, 34, 56))
+        error: Cannot cast a time
+      - desc: date(datetime)
+        expr: date(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: "2018-04-01"
+          type: DATE
+      - desc: date(year, month, day)
+        expr: date(2018, 4, 2)
+        result:
+          value: "2018-04-02"
+          type: DATE
+      - desc: date(year, month, null)
+        expr: date(2018, 4, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-04-01"
+          type: DATE
+      - desc: date(year, null, day)
+        expr: date(2018, $test, 2)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-01-02"
+          type: DATE
+      - desc: date(null, month, day)
+        expr: date($test, 4, 2)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "0001-04-02"
+          type: DATE
+      - desc: date(bad year, month, day)
+        expr: date(-999, 4, 2)
+        error: Invalid year
+
+  - desc: isDate()
+    tests:
+      - desc: isDate(integer)
+        expr: isDate(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(float)
+        expr: isDate(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(string)
+        expr: isDate('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(boolean)
+        expr: isDate(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(list)
+        expr: isDate([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(record)
+        expr: isDate(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(null)
+        expr: isDate(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(date)
+        expr: isDate(date(2018, 4, 1))
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isDate(time)
+        expr: isDate(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDate(datetime)
+        expr: isDate(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: time()
+    tests:
+      - desc: time(integer)
+        expr: time(123)
+        error: Cannot cast an integer
+      - desc: time(float)
+        expr: time(123.456)
+        error: Cannot cast a float
+      - desc: time(string)
+        expr: time('12:34:56.123')
+        result:
+          value: "12:34:56.123"
+          type: TIME
+      - desc: time(string)
+        expr: time('12:34:56')
+        result:
+          value: "12:34:56"
+          type: TIME
+      - desc: time(string)
+        expr: time('12:34')
+        result:
+          value: "12:34:00"
+          type: TIME
+      - desc: time(bad string)
+        expr: time('foo')
+        error: Not a date
+      - desc: time(True)
+        expr: time(True)
+        error: Cannot cast a boolean
+      - desc: time(False)
+        expr: time(False)
+        error: Cannot cast a boolean
+      - desc: time(null)
+        expr: time(Null)
+        result:
+          value: null
+          type: TIME
+      - desc: time(list)
+        expr: time([1,2,3])
+        error: Cannot cast a list
+      - desc: time(record)
+        expr: time(record('foo', 123))
+        error: Cannot cast a record
+      - desc: time(date)
+        expr: time(date(2018, 4, 1))
+        error: Cannot cast a date
+      - desc: time(time)
+        expr: time(time(12, 34, 56))
+        result:
+          value: "12:34:56"
+          type: TIME
+      - desc: time(datetime)
+        expr: time(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: "12:34:56"
+          type: TIME
+      - desc: time(hour, minute, second, microsecond)
+        expr: time(12, 34, 56, 123)
+        result:
+          value: "12:34:56.123"
+          type: TIME
+      - desc: time(hour, minute, second, null)
+        expr: time(12, 34, 56, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "12:34:56"
+          type: TIME
+      - desc: time(hour, minute, second)
+        expr: time(12, 34, 56)
+        result:
+          value: "12:34:56"
+          type: TIME
+      - desc: time(hour, minute, null)
+        expr: time(12, 34, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "12:34:00"
+          type: TIME
+      - desc: time(hour, null, second)
+        expr: time(12, $test, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "12:00:56"
+          type: TIME
+      - desc: time(null, minute, second)
+        expr: time($test, 34, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "00:34:56"
+          type: TIME
+      - desc: time(bad hour, minute, second)
+        expr: time(-999, 34, 56)
+        error: Invalid hour
+
+  - desc: isTime()
+    tests:
+      - desc: isTime(integer)
+        expr: isTime(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(float)
+        expr: isTime(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(string)
+        expr: isTime('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(boolean)
+        expr: isTime(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(list)
+        expr: isTime([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(record)
+        expr: isTime(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(null)
+        expr: isTime(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(date)
+        expr: isTime(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isTime(time)
+        expr: isTime(time(12, 34, 56))
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: isTime(datetime)
+        expr: isTime(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+
+  - desc: datetime()
+    tests:
+      - desc: datetime(integer)
+        expr: datetime(123)
+        error: Cannot cast an integer
+      - desc: datetime(float)
+        expr: datetime(123.456)
+        error: Cannot cast a float
+      - desc: datetime(full datetime string)
+        expr: datetime('2018-04-01T12:34:56.123')
+        result:
+          value: "2018-04-01T12:34:56.123"
+          type: DATETIME
+      - desc: datetime(datetime string without ms)
+        expr: datetime('2018-04-01T12:34:56')
+        result:
+          value: "2018-04-01T12:34:56"
+          type: DATETIME
+      - desc: datetime(datetime string without sec)
+        expr: datetime('2018-04-01T12:34')
+        result:
+          value: "2018-04-01T12:34:00"
+          type: DATETIME
+      - desc: datetime(date string)
+        expr: datetime('2018-04-01')
+        result:
+          value: "2018-04-01T00:00:00"
+          type: DATETIME
+      - desc: datetime(bad string)
+        expr: datetime('foo')
+        error: Not a date
+      - desc: datetime(True)
+        expr: datetime(True)
+        error: Cannot cast a boolean
+      - desc: datetime(False)
+        expr: datetime(False)
+        error: Cannot cast a boolean
+      - desc: datetime(null)
+        expr: datetime(Null)
+        result:
+          value: null
+          type: DATETIME
+      - desc: datetime(list)
+        expr: datetime([1,2,3])
+        error: Cannot cast a list
+      - desc: datetime(record)
+        expr: datetime(record('foo', 123))
+        error: Cannot cast a record
+      - desc: datetime(date)
+        expr: datetime(date(2018, 4, 1))
+        result:
+          value: "2018-04-01T00:00:00"
+          type: DATETIME
+      - desc: datetime(time)
+        expr: datetime(time(12, 34, 56))
+        error: Cannot cast a time
+      - desc: datetime(datetime)
+        expr: datetime(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: "2018-04-01T12:34:56"
+          type: DATETIME
+      - desc: datetime(year, month, day, hour, minute, second, microsecond)
+        expr: datetime(2018, 4, 2, 12, 34, 56, 123)
+        result:
+          value: "2018-04-02T12:34:56.123"
+          type: DATETIME
+      - desc: datetime(year, month, day, hour, minute, second)
+        expr: datetime(2018, 4, 2, 12, 34, 56)
+        result:
+          value: "2018-04-02T12:34:56"
+          type: DATETIME
+      - desc: datetime(year, month, day, hour, minute, null)
+        expr: datetime(2018, 4, 2, 12, 34, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-04-02T12:34:00"
+          type: DATETIME
+      - desc: datetime(year, month, day, hour, null, second)
+        expr: datetime(2018, 4, 2, 12, $test, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-04-02T12:00:56"
+          type: DATETIME
+      - desc: datetime(year, month, day, null, minute, second)
+        expr: datetime(2018, 4, 2, $test, 34, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-04-02T00:34:56"
+          type: DATETIME
+      - desc: datetime(year, month, null, hour, minute, null)
+        expr: datetime(2018, 4, $test, 12, 34, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-04-01T12:34:56"
+          type: DATETIME
+      - desc: datetime(year, null, day, hour, minute, second)
+        expr: datetime(2018, $test, 2, 12, 34, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "2018-01-02T12:34:56"
+          type: DATETIME
+      - desc: datetime(null, month, day, hour, minute, second)
+        expr: datetime($test, 4, 2, 12, 34, 56)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: "0001-04-02T12:34:56"
+          type: DATETIME
+      - desc: datetime(bad year, month, day, hour, minute, second)
+        expr: datetime(-999, 4, 2, 12, 34, 56)
+        error: Invalid year
+
+  - desc: isDatetime()
+    tests:
+      - desc: isDatetime(integer)
+        expr: isDatetime(123)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(float)
+        expr: isDatetime(123.456)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(string)
+        expr: isDatetime('foo')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(boolean)
+        expr: isDatetime(True)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(list)
+        expr: isDatetime([123])
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(record)
+        expr: isDatetime(record('foo', 123))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(null)
+        expr: isDatetime(Null)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(date)
+        expr: isDatetime(date(2018, 4, 1))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(time)
+        expr: isDatetime(time(12, 34, 56))
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: isDatetime(datetime)
+        expr: isDatetime(datetime(2018, 4, 1, 12, 34, 56))
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: today()
+    tests:
+      - desc: today()
+        expr: today()
+        result:
+          type: DATE
+
+  - desc: now()
+    tests:
+      - desc: now()
+        expr: now()
+        result:
+          type: DATETIME
+
+  - desc: year()
+    tests:
+      - desc: year(date)
+        expr: year(date(2018, 4, 2))
+        result:
+          value: 2018
+          type: INTEGER
+      - desc: year(datetime)
+        expr: year(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 2018
+          type: INTEGER
+      - desc: year(null)
+        expr: year($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: month()
+    tests:
+      - desc: month(date)
+        expr: month(date(2018, 4, 2))
+        result:
+          value: 4
+          type: INTEGER
+      - desc: month(datetime)
+        expr: month(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 4
+          type: INTEGER
+      - desc: month(null)
+        expr: month($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: day()
+    tests:
+      - desc: day(date)
+        expr: day(date(2018, 4, 2))
+        result:
+          value: 2
+          type: INTEGER
+      - desc: day(datetime)
+        expr: day(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 2
+          type: INTEGER
+      - desc: day(null)
+        expr: day($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: hour()
+    tests:
+      - desc: hour(time)
+        expr: hour(time(12, 34, 56))
+        result:
+          value: 12
+          type: INTEGER
+      - desc: hour(datetime)
+        expr: hour(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 12
+          type: INTEGER
+      - desc: hour(null)
+        expr: hour($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: minute()
+    tests:
+      - desc: minute(time)
+        expr: minute(time(12, 34, 56))
+        result:
+          value: 34
+          type: INTEGER
+      - desc: minute(datetime)
+        expr: minute(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 34
+          type: INTEGER
+      - desc: minute(null)
+        expr: minute($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: second()
+    tests:
+      - desc: second(time)
+        expr: second(time(12, 34, 56))
+        result:
+          value: 56
+          type: INTEGER
+      - desc: second(datetime)
+        expr: second(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 56
+          type: INTEGER
+      - desc: second(null)
+        expr: second($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: millisecond()
+    tests:
+      - desc: millisecond(time)
+        expr: millisecond(time(12, 34, 56))
+        result:
+          value: 0
+          type: INTEGER
+      - desc: millisecond(time)
+        expr: millisecond(time(12, 34, 56, 123))
+        result:
+          value: 123
+          type: INTEGER
+      - desc: millisecond(datetime)
+        expr: millisecond(datetime(2018, 4, 2, 12, 34, 56))
+        result:
+          value: 0
+          type: INTEGER
+      - desc: millisecond(datetime)
+        expr: millisecond(datetime(2018, 4, 2, 12, 34, 56, 123))
+        result:
+          value: 123
+          type: INTEGER
+      - desc: millisecond(null)
+        expr: millisecond($test)
+        vars:
+          test:
+            value: null
+            type: DATETIME
+        result:
+          value: null
+          type: INTEGER
+
+  - desc: upper()
+    tests:
+      - desc: upper(string)
+        expr: upper('FooBar')
+        result:
+          value: FOOBAR
+          type: STRING
+      - desc: upper(empty string)
+        expr: upper('')
+        result:
+          value: ''
+          type: STRING
+      - desc: upper(null)
+        expr: upper($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+
+  - desc: lower()
+    tests:
+      - desc: lower(string)
+        expr: lower('FooBar')
+        result:
+          value: foobar
+          type: STRING
+      - desc: lower(empty string)
+        expr: lower('')
+        result:
+          value: ''
+          type: STRING
+      - desc: lower(null)
+        expr: lower($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+
+  - desc: trim()
+    tests:
+      - desc: trim(string)
+        expr: trim('  foobar  ')
+        result:
+          value: foobar
+          type: STRING
+      - desc: trim(empty string)
+        expr: trim('')
+        result:
+          value: ''
+          type: STRING
+      - desc: trim(null)
+        expr: trim($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+
+  - desc: ltrim()
+    tests:
+      - desc: ltrim(string)
+        expr: ltrim('  foobar  ')
+        result:
+          value: 'foobar  '
+          type: STRING
+      - desc: ltrim(empty string)
+        expr: ltrim('')
+        result:
+          value: ''
+          type: STRING
+      - desc: ltrim(null)
+        expr: ltrim($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+
+  - desc: rtrim()
+    tests:
+      - desc: rtrim(string)
+        expr: rtrim('  foobar  ')
+        result:
+          value: '  foobar'
+          type: STRING
+      - desc: rtrim(empty string)
+        expr: rtrim('')
+        result:
+          value: ''
+          type: STRING
+      - desc: rtrim(null)
+        expr: rtrim($test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+
+  - desc: repeat()
+    tests:
+      - desc: repeat(string, integer)
+        expr: repeat('foo', 2)
+        result:
+          value: foofoo
+          type: STRING
+      - desc: repeat(string, zero)
+        expr: repeat('foo', 0)
+        result:
+          value: ''
+          type: STRING
+      - desc: repeat(empty string, integer)
+        expr: repeat('', 2)
+        result:
+          value: ''
+          type: STRING
+      - desc: repeat(null, integer)
+        expr: repeat($test, 2)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+      - desc: repeat(string, null)
+        expr: repeat('foo', $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: foo
+          type: STRING
+      - desc: repeat(string, negative integer)
+        expr: repeat('foo', -2)
+        error: Repetitions cannot be negative
+
+  - desc: replace()
+    tests:
+      - desc: replace(string, string, string)
+        expr: replace('foobar', 'oo', 'EE')
+        result:
+          value: fEEbar
+          type: STRING
+      - desc: replace(string, empty string, string)
+        expr: replace('foobar', '', 'EE')
+        result:
+          value: foobar
+          type: STRING
+      - desc: replace(string, null, string)
+        expr: replace('foobar', $test, 'EE')
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: foobar
+          type: STRING
+      - desc: replace(null, string, string)
+        expr: replace($test, 'oo', 'EE')
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: null
+          type: STRING
+      - desc: replace(string, string, null)
+        expr: replace('foobar', 'oo', $test)
+        vars:
+          test:
+            value: null
+            type: STRING
+        result:
+          value: fbar
+          type: STRING
+
+  - desc: between()
+    tests:
+      - desc: In-Bounds
+        expr: between(3, 1, 5)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: Out-of-Bounds
+        expr: between(-1, 1, 5)
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: On starting bounds
+        expr: between(1, 1, 5)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: On ending bounds
+        expr: between(5, 1, 5)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: between(null, integer, integer)
+        expr: between($test, 1, 5)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: between(integer, null, integer)
+        expr: between(3, $test, 5)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: between(integer, integer, null)
+        expr: between(3, 1, $test)
+        vars:
+          test:
+            value: null
+            type: INTEGER
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: between(mixed)
+        expr: between(3, 1.23, 5)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: between(mixed) 2
+        expr: between(3, 1, 5.0213123)
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: between(mixed) 3
+        expr: between(3.23434, 2.232423, 5)
+        result:
+          value: true
+          type: BOOLEAN
+
+
+
+
+
+
+
+
+
+
+  #
+  # TODO All Below here need more test cases
+  #
+
+
+  - desc: Equality Operator
+    tests:
+      - desc: integer==different integer
+        expr: 123 == 456
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: integer==same integer
+        expr: 123 == 123
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: float==different float
+        expr: 12.34 == 5e6
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: float==same float
+        expr: 12.34 == 12.34
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: string==different string
+        expr: "'foo' == 'bar'"
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: string==same string
+        expr: "'foo' == 'foo'"
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: bool==different bool
+        expr: True == False
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: bool==same bool
+        expr: True == True
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: list==different list
+        expr: "[1, 2, 3] == [4, 'foo']"
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: list==same list
+        expr: "[1, 2, 3] == [1, 2, 3]"
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: date==different date
+        expr: date('2018-04-02') == date('2011-02-04')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: date==same date
+        expr: date('2018-04-02') == date('2018-04-02')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: time==different time
+        expr: time('12:34:56') == time('11:22:33')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: time==same time
+        expr: time('12:34:56') == time('12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: datetime==different datetime
+        expr: datetime('2018-04-02T12:34:56') == datetime('2011-02-04T11:22:33')
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: datetime==same datetime
+        expr: datetime('2018-04-02T12:34:56') == datetime('2018-04-02T12:34:56')
+        result:
+          value: true
+          type: BOOLEAN
+      - desc: integer==bool
+        expr: 123 == True
+        result:
+          value: false
+          type: BOOLEAN
+      - desc: integer==bool
+        expr: 1 == True
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: Non-Equality Operator
+    tests:
+      - desc: bool!=bool
+        expr: True != False
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: Less-Than Operator
+    tests:
+      - desc: int<int
+        expr: 4 < 10
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: Less-Than-or-Equal Operator
+    tests:
+      - desc: int<=int
+        expr: 4 <= 4
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: Greater-Than Operator
+    tests:
+      - desc: int>int
+        expr: 10 > 4
+        result:
+          value: true
+          type: BOOLEAN
+
+  - desc: Greater-Than-or-Equal Operator
+    tests:
+      - desc: int>=int
+        expr: 4 >= 4
+        result:
+          value: true
+          type: BOOLEAN
+
