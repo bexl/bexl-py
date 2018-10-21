@@ -5,8 +5,7 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  # PyYAML doesn't install on 3.7
-  # - "3.7-dev"
+  - "3.7-dev"
   # pipenv has trouble with pypy
   # - "pypy"
   - "pypy3"
@@ -15,9 +14,10 @@ env:
   - PIPENV_IGNORE_VIRTUALENVS=1
 
 install:
-  - pip install pipenv
-  - pipenv --version
+  - pip install --upgrade pip pipenv
+  - pip freeze
   - make setup
+  - pipenv run pip freeze
 
 script:
   - make ci
