@@ -1,5 +1,5 @@
 setup::
-	@pipenv install --dev
+	@PIP_USE_PEP517=no pipenv install --dev
 
 lint::
 	@pipenv run tidypy check
