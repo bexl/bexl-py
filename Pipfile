@@ -12,7 +12,6 @@ coverage = "*"
 pyyaml = "*"
 twine = "*"
 wheel = "*"
-tidypy = "*"
 pytest-watch = "*"
 
 [packages]
